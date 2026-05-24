@@ -15,14 +15,12 @@ def check_streaming_services():
     
     for url in SERVICES:
         try:
-            # Wir setzen einen "User-Agent", damit wir nicht sofort wie ein Bot blockiert werden
             headers = {'User-Agent': 'Mozilla/5.0'}
             response = requests.get(url, headers=headers, timeout=5)
             
             if response.status_code == 200:
                 print(f"[OK]   {url}")
             else:
-                # Bei Streaming-Seiten ist ein 403 oft normal (Sicherheits-Schutz)
                 print(f"[WARN] {url} - Status: {response.status_code}")
                 
         except requests.exceptions.RequestException as e:
