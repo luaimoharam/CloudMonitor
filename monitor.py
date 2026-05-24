@@ -1,31 +1,46 @@
 import requests
+import time
+from datetime import datetime
 
-# List of services to check
+# Liste der zu überwachenden Seiten
 SERVICES = [
     "https://www.google.com",
-    "https://www.github.com",
-    "https://www.openai.com"
+    "https://www.github.com"
 ]
 
-def check_uptime(service_list):
-    print("--- Starting Uptime Monitor ---")
+LOG_FILE = "monitor_log.txt"
+
+def check_uptime():
+    print(f"--- Check gestartet: {datetime.now()} ---")
     
-    for url in service_list:
-        try:
-            # Send a GET request
-            response = requests.get(url, timeout=5)
-            
-            # Check if status code is 200 (OK)
-            if response.status_code == 200:
-                print(f"[UP] {url} - Status: {response.status_code}")
-            else:
-                print(f"[WARNING] {url} - Status: {response.status_code}")
+    # "a" steht für append (anhängen), damit wir nichts überschreiben
+    with open(LOG_FILE, "a") as file:
+        for url in SERVICES:
+            try:
+                response = requests.get(url, timeout=5)
+                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 
-        except requests.exceptions.RequestException as e:
-            # This catches connection errors, DNS issues, etc.
-            print(f"[DOWN] {url} - Error: {e}")
+                if response.status_code == 200:
+                    status_text = f"[{timestamp}] [UP] {url} - Status: 200\n"
+                else:
+                    status_text = f"[{timestamp}] [WARNING] {url} - Status: {response.status_code}\n"
+                
+                # In Datei schreiben UND im Terminal anzeigen
+                file.write(status_text)
+                print(status_text.strip())
+                
+            except requests.exceptions.RequestException as e:
+                error_text = f"[{timestamp}] [DOWN] {url} - Error: {e}\n"
+                file.write(error_text)
+                print(error_text.strip())
 
-    print("--- Check Complete ---")
-
+# Das ist die Endlosschleife
 if __name__ == "__main__":
-    check_uptime(SERVICES)
+    print("Monitor läuft... (Drücke Strg+C zum Stoppen)")
+    try:
+        while True:
+            check_uptime()
+            # Warte 60 Sekunden, bevor der nächste Check erfolgt
+            time.sleep(60) 
+    except KeyboardInterrupt:
+        print("\nMonitor wurde manuell gestoppt.")
